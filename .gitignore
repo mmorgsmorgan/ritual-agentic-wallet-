@@ -1,0 +1,24 @@
+node_modules/
+dist/
+data/
+.env
+.env.local
+.env.*.local
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local probes / scratch
+scripts/probe-*.mjs
+scratch/
+*.scratch.*
+
+# Coverage
+coverage/
+.nyc_output/
