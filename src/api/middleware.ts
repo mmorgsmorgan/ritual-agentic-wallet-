@@ -48,6 +48,11 @@ export const UpdatePolicySchema = z.object({
   frozen: z.boolean().optional(),
 });
 
+export const SweepAndArchiveSchema = z.object({
+  agentShard: z.string().min(1, 'Agent shard is required'),
+  sweepTo: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address'),
+});
+
 // ============================================================
 // Middleware Types
 // ============================================================

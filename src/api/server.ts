@@ -16,6 +16,7 @@ import {
   getCurrentBlock,
   SYSTEM_CONTRACTS,
   PRECOMPILES,
+  getPublicClient,
 } from '../core/ritual.js';
 import {
   createWallet as dbCreateWallet,
@@ -43,6 +44,7 @@ import {
   SignMessageSchema,
   DepositRitualSchema,
   UpdatePolicySchema,
+  SweepAndArchiveSchema,
 } from './middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -513,6 +515,98 @@ export function createApp() {
     updateWalletStatus(wallet.id, 'active');
     updatePolicy(wallet.id, { frozen: false });
     res.json({ status: 'active', walletId: wallet.id });
+  });
+
+  /**
+   * POST /wallets/:id/sweep-and-archive — Sweep funds and archive wallet
+   *
+   * Sweeps all native balance to a target address, then marks the wallet as
+   * archived and releases the API-key grant so a new wallet can be created.
+   *
+   * Body: { agentShard, sweepTo }
+   */
+  app.post('/wallets/:id/sweep-and-archive', authMiddleware, validate(SweepAndArchiveSchema), async (req, res, next) => {
+    try {
+      const walletId = param(req.params.id);
+      const { agentShard, sweepTo } = req.body;
+
+      const wallet = getWallet(walletId);
+      if (!wallet) {
+        res.status(404).json({ error: 'Wallet not found' });
+        return;
+      }
+
+      if (wallet.status === 'archived') {
+        res.status(409).json({ error: 'Wallet already archived', walletId });
+        return;
+      }
+
+      // Check balance
+      const balance = await getNativeBalance(wallet.address as Address);
+      const balanceWei = BigInt(balance.wei);
+
+      let sweepTxHash: Hex | null = null;
+
+      // Sweep if balance > 0
+      if (balanceWei > 0n) {
+        const config = loadConfig();
+        const encryptionKey = config.encryptionKey;
+        const serverShard = decryptShard(wallet.serverShard, encryptionKey);
+
+        // Estimate gas for a simple transfer (21000 gas standard)
+        const gasPrice = await getPublicClient().getGasPrice();
+        const gasLimit = 21000n;
+        const gasCost = gasPrice * gasLimit;
+
+        if (balanceWei <= gasCost) {
+          res.status(400).json({
+            error: 'Balance too low to cover gas',
+            balance: balance.formatted,
+            gasCost: (gasCost / 10n ** 18n).toString(),
+          });
+          return;
+        }
+
+        const sweepAmount = balanceWei - gasCost;
+
+        // Sign and send sweep transaction
+        const result = await signAndSendTransaction(serverShard, agentShard, {
+          to: sweepTo as Address,
+          value: (sweepAmount / 10n ** 18n).toString(), // Convert wei to ether string
+          gas: gasLimit,
+        });
+
+        sweepTxHash = result.hash;
+
+        recordTransaction(
+          wallet.id,
+          result.hash,
+          sweepTo,
+          sweepAmount.toString(),
+          '0x',
+          'confirmed'
+        );
+      }
+
+      // Archive wallet and release API-key grant
+      updateWalletStatus(wallet.id, 'archived');
+      updatePolicy(wallet.id, { frozen: true });
+
+      if (req.apiKeyHash) {
+        revertApiKeyGrant(req.apiKeyHash);
+      }
+
+      res.json({
+        status: 'archived',
+        walletId: wallet.id,
+        swept: balanceWei > 0n,
+        sweepTxHash,
+        sweepTo,
+        apiKeyGrantReleased: !!req.apiKeyHash,
+      });
+    } catch (err) {
+      next(err);
+    }
   });
 
   // ── Error Handler ─────────────────────────────────────────
