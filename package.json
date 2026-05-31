@@ -1,46 +1,19 @@
 {
-  "name": "ritual-agent-wallet",
+  "name": "ritkey",
   "version": "1.0.0",
-  "description": "MPC wallet service for AI agents on Ritual Chain — self-onboards with bundled Ritual skills + rules",
-  "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "ritual-agent-wallet": "dist/index.js",
-    "ritual-agent-wallet-mcp": "dist/mcp/index.js"
-  },
-  "files": [
-    "dist",
-    "src/skills",
-    "src/dashboard",
-    "README.md"
+  "description": "MPC wallet infrastructure for AI agents on Ritual Chain",
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc && npm run copy-assets",
-    "copy-assets": "node scripts/copy-assets.mjs",
-    "start": "node dist/index.js",
-    "mcp": "tsx src/mcp/index.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "@noble/curves": "^1.8.2",
-    "@noble/hashes": "^1.7.2",
-    "better-sqlite3": "^11.9.1",
-    "express": "^5.1.0",
-    "uuid": "^11.1.0",
-    "viem": "^2.31.3",
-    "zod": "^3.25.11"
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "dev:service": "npm run dev -w @ritkey/service",
+    "dev:mcp": "npm run dev -w @ritkey/mcp",
+    "dev:frontend": "npm run dev -w @ritkey/frontend"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.0",
-    "@types/express": "^5.0.2",
-    "@types/node": "^22.15.21",
-    "@types/supertest": "^7.2.0",
-    "@types/uuid": "^10.0.0",
-    "supertest": "^7.2.2",
-    "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "vitest": "^4.1.7"
   }
