@@ -22,3 +22,15 @@ scratch/
 # Coverage
 coverage/
 .nyc_output/
+
+# Rust / NAPI build artifacts
+target/
+*.node
+Cargo.lock.bak
+
+# tsup / tsc build leftovers
+.tsbuildinfo
+*.tsbuildinfo
+
+# Tarballs from `npm pack`
+*.tgz
