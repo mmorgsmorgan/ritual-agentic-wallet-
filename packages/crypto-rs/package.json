@@ -1,0 +1,34 @@
+{
+  "name": "@ritkey/crypto",
+  "version": "1.0.0",
+  "description": "Rust-based cryptographic operations for Ritkey with TSS and memory safety",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "ritkey-crypto",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-pc-windows-msvc"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "cargo test",
+    "artifacts": "napi artifacts"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ]
+}
