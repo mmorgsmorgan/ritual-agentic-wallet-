@@ -1,0 +1,54 @@
+{
+  "name": "@ritkey/cli",
+  "version": "0.1.1",
+  "description": "Command-line operator tool for Ritkey — wallets, events, alerts, webhooks",
+  "license": "MIT",
+  "author": "Chiefmmorgs <chiefmmorgs@gmail.com>",
+  "homepage": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-/issues"
+  },
+  "type": "module",
+  "bin": {
+    "ritkey": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ritkey",
+    "ritual",
+    "wallet",
+    "cli",
+    "mpc",
+    "ai-agents"
+  ],
+  "dependencies": {
+    "@ritkey/sdk": "^0.1.0",
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
