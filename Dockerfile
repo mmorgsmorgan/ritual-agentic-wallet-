@@ -42,7 +42,6 @@ COPY --from=builder /app/packages/core/dist                      ./packages/core
 COPY --from=builder /app/packages/core/package.json              ./packages/core/package.json
 COPY --from=builder /app/packages/service/dist                   ./packages/service/dist
 COPY --from=builder /app/packages/service/package.json           ./packages/service/package.json
-COPY --from=builder /app/packages/service/node_modules           ./packages/service/node_modules
 # Native NAPI binary + JS shim for @ritkey/crypto
 COPY --from=builder /app/packages/crypto-rs/index.js             ./packages/crypto-rs/index.js
 COPY --from=builder /app/packages/crypto-rs/index.d.ts           ./packages/crypto-rs/index.d.ts
