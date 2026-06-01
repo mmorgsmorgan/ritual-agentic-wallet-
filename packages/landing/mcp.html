@@ -48,6 +48,17 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
+
+  /* Reduced-motion: hide the moving video, darken further; poster still shows. */
+  @media (prefers-reduced-motion: reduce) {
+    .bg-video { display: none; }
+    .bg-overlay {
+      background: linear-gradient(180deg, rgba(11,13,16,0.92) 0%, rgba(11,13,16,0.96) 100%);
+    }
+  }
+  @media print {
+    .bg-video, .bg-overlay { display: none; }
+  }
   .wrap { max-width: 920px; margin: 0 auto; padding: 56px 24px 96px; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
   .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
@@ -216,7 +227,8 @@
 </style>
 </head>
 <body>
-<video class="bg-video" autoplay muted loop playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+<video class="bg-video" autoplay muted loop playsinline preload="auto" poster="/assets/key-bg-poster.jpg">
+  <source src="/assets/key-bg.webm" type="video/webm">
   <source src="/assets/key-bg.mp4" type="video/mp4">
 </video>
 <div class="bg-overlay"></div>
@@ -257,7 +269,7 @@
     <div class="form-grid">
       <div class="field">
         <label for="mcpUrl">MCP server URL</label>
-        <input id="mcpUrl" type="text" placeholder="https://your-mcp.up.railway.app/mcp" autocomplete="off" spellcheck="false">
+        <input id="mcpUrl" type="text" placeholder="https://zooming-gentleness-production-0d17.up.railway.app/mcp" autocomplete="off" spellcheck="false" value="https://zooming-gentleness-production-0d17.up.railway.app/mcp">
       </div>
       <div class="field">
         <label for="bearerToken">MCP_BEARER_TOKEN</label>
@@ -501,7 +513,7 @@
   }
   function hostedValues() {
     return {
-      url:    mcpUrlEl.value.trim() || 'https://your-mcp.up.railway.app/mcp',
+      url:    mcpUrlEl.value.trim() || 'https://zooming-gentleness-production-0d17.up.railway.app/mcp',
       bearer: bearerEl.value.trim() || 'YOUR_BEARER_TOKEN',
     };
   }

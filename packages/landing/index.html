@@ -46,6 +46,17 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
+
+  /* Reduced-motion: hide the moving video, darken further; poster still shows. */
+  @media (prefers-reduced-motion: reduce) {
+    .bg-video { display: none; }
+    .bg-overlay {
+      background: linear-gradient(180deg, rgba(11,13,16,0.92) 0%, rgba(11,13,16,0.96) 100%);
+    }
+  }
+  @media print {
+    .bg-video, .bg-overlay { display: none; }
+  }
   .wrap { max-width: 880px; margin: 0 auto; padding: 56px 24px 96px; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
   .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
@@ -162,7 +173,8 @@
 </style>
 </head>
 <body>
-<video class="bg-video" autoplay muted loop playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+<video class="bg-video" autoplay muted loop playsinline preload="auto" poster="/assets/key-bg-poster.jpg">
+  <source src="/assets/key-bg.webm" type="video/webm">
   <source src="/assets/key-bg.mp4" type="video/mp4">
 </video>
 <div class="bg-overlay"></div>
