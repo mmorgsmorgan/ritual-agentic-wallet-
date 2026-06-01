@@ -1,0 +1,60 @@
+{
+  "name": "@ritkey/mcp",
+  "version": "0.1.0",
+  "description": "Ritkey MCP server — AI agent tools for wallet operations on Ritual Chain",
+  "license": "MIT",
+  "author": "Chiefmmorgs <chiefmmorgs@gmail.com>",
+  "homepage": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git",
+    "directory": "packages/mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-/issues"
+  },
+  "type": "module",
+  "main": "dist/mcp/index.js",
+  "bin": {
+    "ritkey-mcp": "dist/mcp/index.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/mcp/index.ts",
+    "start": "node dist/mcp/index.js",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ritkey",
+    "ritual",
+    "mcp",
+    "model-context-protocol",
+    "wallet",
+    "ai-agents",
+    "claude"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@ritkey/sdk": "^0.1.0",
+    "zod": "^3.25.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
