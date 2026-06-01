@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ritkey — MPC wallets for AI agents</title>
+<meta name="description" content="MPC wallet infrastructure for AI agents on Ritual Chain. Threshold signatures, webhooks, alerts, MCP integration.">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --fg: #e6e6e6;
+    --muted: #8a8f98;
+    --accent: #ffb547;
+    --accent-2: #4fd1c5;
+    --panel: #14171c;
+    --border: #1f242c;
+    --code: #0e1116;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 24px 96px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
+  .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .logo .glyph { color: var(--accent); }
+  nav a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
+  nav a:hover { color: var(--fg); }
+
+  h1 {
+    font-size: 2.6rem;
+    line-height: 1.15;
+    margin: 0 0 14px;
+    letter-spacing: -0.02em;
+  }
+  h1 .accent { color: var(--accent); }
+  .lede {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0 0 36px;
+  }
+
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 48px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); display: inline-block; }
+
+  h2 {
+    font-size: 1.35rem;
+    margin: 48px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 .num { color: var(--muted); font-weight: 400; margin-right: 8px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0;
+    margin: 0 0 20px;
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { color: var(--fg); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--accent-2); border-color: var(--accent-2); }
+
+  pre, code {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.88rem;
+  }
+  pre {
+    margin: 0;
+    padding: 16px;
+    background: var(--code);
+    color: var(--fg);
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  .key { color: #c9b8ff; }
+  .str { color: #b5e8a1; }
+  .com { color: var(--muted); }
+
+  p { color: var(--muted); max-width: 65ch; }
+  p code { background: var(--panel); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; color: var(--fg); }
+  ul { color: var(--muted); padding-left: 20px; max-width: 65ch; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 2rem; }
+    .wrap { padding: 36px 18px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo"><span class="glyph">⬡</span> ritkey</div>
+    <nav>
+      <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">GitHub</a>
+      <a href="https://www.npmjs.com/package/@ritkey/sdk">SDK</a>
+      <a href="https://www.npmjs.com/package/@ritkey/cli">CLI</a>
+    </nav>
+  </header>
+
+  <h1>MPC wallets <span class="accent">for AI agents</span></h1>
+  <p class="lede">
+    Threshold-signed wallets on Ritual Chain that your agent can drive over HTTP, MCP, or a CLI.
+    No browser extension. No seed phrase the agent can leak. Webhooks + alerts for everything that matters.
+  </p>
+
+  <div class="badges">
+    <span class="badge"><span class="dot"></span> Shamir 2-of-3</span>
+    <span class="badge">Webhooks (HMAC)</span>
+    <span class="badge">Alert rules</span>
+    <span class="badge">MCP-ready</span>
+    <span class="badge">MIT</span>
+  </div>
+
+  <h2><span class="num">1.</span>Install the SDK</h2>
+  <p>Drop into any TypeScript/JS agent. Zero runtime deps. Works in Node 18+, Cloudflare Workers, Vercel, Deno.</p>
+  <div class="card">
+    <div class="card-head">terminal<button class="copy-btn" data-copy="npm install @ritkey/sdk">Copy</button></div>
+<pre><span class="com"># Install</span>
+npm install @ritkey/sdk
+
+<span class="com"># Use</span>
+<span class="key">import</span> { RitkeyClient } <span class="key">from</span> <span class="str">'@ritkey/sdk'</span>;
+
+<span class="key">const</span> client = <span class="key">new</span> RitkeyClient({
+  baseUrl: <span class="str">'https://your-ritkey-service'</span>,
+  apiKey: process.env.RITKEY_API_KEY,
+});
+
+<span class="key">const</span> wallet = <span class="key">await</span> client.wallets.create({ label: <span class="str">'agent-7'</span> });
+console.log(wallet.address);     <span class="com">// 0x...</span>
+console.log(wallet.agentShard);  <span class="com">// save this</span></pre>
+  </div>
+
+  <h2><span class="num">2.</span>Install the CLI</h2>
+  <p>For operators. Inspect wallets, balances, events, alerts from the terminal.</p>
+  <div class="card">
+    <div class="card-head">terminal<button class="copy-btn" data-copy="npm install -g @ritkey/cli">Copy</button></div>
+<pre><span class="com"># Global install</span>
+npm install -g @ritkey/cli
+
+<span class="com"># Or one-off</span>
+npx @ritkey/cli wallets
+
+<span class="com"># Configure once</span>
+ritkey login --url https://your-ritkey-service --key YOUR_KEY
+
+<span class="com"># Then</span>
+ritkey wallets
+ritkey events watch
+ritkey alert new --wallet ID --kind spend_threshold --threshold 0.5</pre>
+  </div>
+
+  <h2><span class="num">3.</span>Plug into Claude / Cursor (MCP)</h2>
+  <p>Give your agent direct tool access — 25 tools for wallets, events, alerts, webhooks. Add this to your MCP client config:</p>
+  <div class="card">
+    <div class="card-head">claude_desktop_config.json<button class="copy-btn" data-copy='{"mcpServers":{"ritual-agent-wallet":{"command":"npx","args":["@ritkey/mcp"],"env":{"RITKEY_API_URL":"https://your-ritkey-service","RITKEY_API_KEY":"YOUR_KEY"}}}}'>Copy</button></div>
+<pre>{
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"ritual-agent-wallet"</span>: {
+      <span class="key">"command"</span>: <span class="str">"npx"</span>,
+      <span class="key">"args"</span>: [<span class="str">"@ritkey/mcp"</span>],
+      <span class="key">"env"</span>: {
+        <span class="key">"RITKEY_API_URL"</span>: <span class="str">"https://your-ritkey-service"</span>,
+        <span class="key">"RITKEY_API_KEY"</span>: <span class="str">"YOUR_KEY"</span>
+      }
+    }
+  }
+}</pre>
+  </div>
+
+  <h2>What's in the box</h2>
+  <ul>
+    <li><strong>Threshold signing.</strong> Shamir 2-of-3. Server holds one share, you hold the agent share, cold storage holds the third.</li>
+    <li><strong>Webhooks.</strong> HMAC-signed (Stripe scheme). SSRF defense, DNS rebinding protection, exponential retry. <code>verifyWebhook()</code> helper in the SDK.</li>
+    <li><strong>Alert rules.</strong> <code>spend_threshold</code>, <code>unusual_recipient</code>, <code>key_export_warning</code>, <code>balance_low</code> — all delivered through your webhooks.</li>
+    <li><strong>Import / export.</strong> Bring your own private key, or export to MetaMask / Rabby (archives the wallet automatically).</li>
+    <li><strong>Sybil defense.</strong> One wallet per API key by default.</li>
+  </ul>
+
+  <h2>Self-host the service</h2>
+  <p>The wallet service is in the same repo — run it locally, on Railway, on Fly, wherever. Then point SDK / CLI / MCP at it:</p>
+  <div class="card">
+    <div class="card-head">terminal<button class="copy-btn" data-copy="git clone https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git">Copy</button></div>
+<pre>git clone https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git
+cd ritual-agentic-wallet-
+npm install
+npm run dev:service</pre>
+  </div>
+
+  <footer>
+    <div>MIT — <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">github.com/mmorgsmorgan/ritual-agentic-wallet-</a></div>
+    <div>Chain 1979 · Ritual</div>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy);
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = old;
+          btn.classList.remove('copied');
+        }, 1500);
+      } catch {}
+    });
+  });
+</script>
+</body>
+</html>

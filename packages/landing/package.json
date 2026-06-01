@@ -1,0 +1,10 @@
+{
+  "name": "@ritkey/landing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ritkey landing page — install snippets for SDK, CLI, and MCP",
+  "scripts": {
+    "dev": "node serve.mjs",
+    "build": "echo 'static — nothing to build'"
+  }
+}
