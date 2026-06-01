@@ -1,0 +1,42 @@
+{
+  "name": "@ritkey/service",
+  "version": "1.0.0",
+  "description": "Ritkey HTTP service - REST API, database, faucet, dashboard",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ritkey-service": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "node scripts/copy-assets.mjs",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "setup-admin": "tsx scripts/setup-admin.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ritkey/core": "file:../core",
+    "better-sqlite3": "^11.9.1",
+    "express": "^5.1.0",
+    "uuid": "^11.1.0",
+    "viem": "^2.31.3",
+    "zod": "^3.25.11"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.21",
+    "@types/supertest": "^7.2.0",
+    "@types/uuid": "^10.0.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.7"
+  }
+}
