@@ -139,6 +139,23 @@
   .panel-set { display: none; }
   .panel-set.active { display: block; }
 
+  .mode-toggle {
+    display: inline-flex; gap: 4px; padding: 4px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; margin: 0 0 18px;
+  }
+  .mode-btn {
+    background: transparent; border: none; color: var(--muted);
+    padding: 8px 16px; cursor: pointer; font-family: inherit;
+    font-size: 0.88rem; border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { color: var(--fg); }
+  .mode-btn.active { background: var(--code); color: var(--fg); }
+
+  .mode-panel { display: none; }
+  .mode-panel.active { display: block; }
+
   .tools-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 8px; margin: 16px 0 0;
@@ -197,28 +214,53 @@
   <div class="badges">
     <span class="badge"><span class="dot"></span> @ritkey/mcp@0.1.0</span>
     <span class="badge">25 tools</span>
-    <span class="badge">stdio transport</span>
+    <span class="badge">stdio + HTTP</span>
     <span class="badge">MIT</span>
   </div>
 
-  <h2><span class="num">1.</span>Configure your service</h2>
-  <p>Point the MCP server at a Ritkey service. Fields below update the config snippets live and are saved locally in your browser only.</p>
+  <h2><span class="num">1.</span>Pick a transport</h2>
+  <p>The <strong>Hosted</strong> MCP runs on Railway — no Node install, instant. <strong>Local</strong> spawns the server on the user's machine via <code>npx</code> — more control, requires Node 18+.</p>
 
-  <div class="form-grid">
-    <div class="field">
-      <label for="apiUrl">RITKEY_API_URL</label>
-      <input id="apiUrl" type="text" placeholder="https://your-ritkey-service" autocomplete="off" spellcheck="false">
+  <div class="mode-toggle" id="modeToggle">
+    <button class="mode-btn active" data-mode="hosted">Hosted (recommended)</button>
+    <button class="mode-btn" data-mode="local">Local (npx)</button>
+  </div>
+
+  <!-- Hosted mode form -->
+  <div class="mode-panel active" data-mode-panel="hosted">
+    <div class="form-grid">
+      <div class="field">
+        <label for="mcpUrl">MCP server URL</label>
+        <input id="mcpUrl" type="text" placeholder="https://your-mcp.up.railway.app/mcp" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="bearerToken">MCP_BEARER_TOKEN</label>
+        <input id="bearerToken" type="text" placeholder="hex…" autocomplete="off" spellcheck="false">
+      </div>
     </div>
-    <div class="field">
-      <label for="apiKey">RITKEY_API_KEY</label>
-      <input id="apiKey" type="text" placeholder="rk_…" autocomplete="off" spellcheck="false">
+    <div class="note">
+      <strong>Don't host your own?</strong> Use the public demo:
+      <code>https://zooming-gentleness-production-0d17.up.railway.app/mcp</code> — ask the maintainer for a token.
     </div>
   </div>
 
-  <div class="note">
-    <strong>No service yet?</strong> Run <code>npm install &amp;&amp; npm run dev:service</code> from the
-    <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">monorepo</a> and use
-    <code>http://localhost:8787</code>. The first run prints an admin key — that's your <code>RITKEY_API_KEY</code>.
+  <!-- Local mode form -->
+  <div class="mode-panel" data-mode-panel="local">
+    <div class="form-grid">
+      <div class="field">
+        <label for="apiUrl">RITKEY_API_URL</label>
+        <input id="apiUrl" type="text" placeholder="https://your-ritkey-service" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="apiKey">RITKEY_API_KEY</label>
+        <input id="apiKey" type="text" placeholder="rk_…" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="note">
+      <strong>No service yet?</strong> Run <code>npm install &amp;&amp; npm run dev:service</code> from the
+      <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">monorepo</a> and use
+      <code>http://localhost:3000</code>. The first run prints an admin key — that's your <code>RITKEY_API_KEY</code>.
+    </div>
   </div>
 
   <h2><span class="num">2.</span>Pick your client</h2>
@@ -384,8 +426,8 @@
   <ul>
     <li><strong>Tools don't show up.</strong> Fully quit and restart the client — MCP servers are launched on app start.</li>
     <li><strong>"command not found: npx".</strong> Install Node 18+ from <a href="https://nodejs.org">nodejs.org</a> or via your package manager.</li>
-    <li><strong>Auth errors.</strong> Confirm <code>RITKEY_API_KEY</code> matches the key your service printed on first run.</li>
-    <li><strong>Pin a version.</strong> Replace <code>@ritkey/mcp</code> with <code>@ritkey/mcp@0.1.0</code> in the args array.</li>
+    <li><strong>Auth errors.</strong> Hosted mode: re-check the bearer token. Local mode: confirm <code>RITKEY_API_KEY</code> matches the key your service printed on first run.</li>
+    <li><strong>Pin a version.</strong> Replace <code>@ritkey/mcp</code> (local) or <code>mcp-remote</code> (hosted) with a versioned spec in the args array.</li>
   </ul>
 
   <footer>
@@ -395,15 +437,22 @@
 </div>
 
 <script>
-  const apiUrlEl = document.getElementById('apiUrl');
-  const apiKeyEl = document.getElementById('apiKey');
-  const STORAGE_KEY = 'ritkey-mcp-config';
+  const apiUrlEl     = document.getElementById('apiUrl');
+  const apiKeyEl     = document.getElementById('apiKey');
+  const mcpUrlEl     = document.getElementById('mcpUrl');
+  const bearerEl     = document.getElementById('bearerToken');
+  const STORAGE_KEY  = 'ritkey-mcp-config';
+
+  let currentMode = 'hosted';
 
   // Load saved values
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     if (saved.apiUrl) apiUrlEl.value = saved.apiUrl;
     if (saved.apiKey) apiKeyEl.value = saved.apiKey;
+    if (saved.mcpUrl) mcpUrlEl.value = saved.mcpUrl;
+    if (saved.bearer) bearerEl.value = saved.bearer;
+    if (saved.mode === 'local' || saved.mode === 'hosted') currentMode = saved.mode;
   } catch {}
 
   function save() {
@@ -411,82 +460,106 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         apiUrl: apiUrlEl.value,
         apiKey: apiKeyEl.value,
+        mcpUrl: mcpUrlEl.value,
+        bearer: bearerEl.value,
+        mode: currentMode,
       }));
     } catch {}
   }
 
-  function getValues() {
+  function localValues() {
     return {
       url: apiUrlEl.value.trim() || 'https://your-ritkey-service',
       key: apiKeyEl.value.trim() || 'YOUR_KEY',
     };
   }
+  function hostedValues() {
+    return {
+      url:    mcpUrlEl.value.trim() || 'https://your-mcp.up.railway.app/mcp',
+      bearer: bearerEl.value.trim() || 'YOUR_BEARER_TOKEN',
+    };
+  }
 
-  // Build configs for each client
-  function buildConfigs() {
-    const { url, key } = getValues();
-
-    // Claude Desktop / Cursor / Cline / Windsurf — all use mcpServers
+  // ── Local-mode configs (npx @ritkey/mcp) ───────────────
+  function buildLocalConfigs() {
+    const { url, key } = localValues();
     const mcpServersCfg = {
       mcpServers: {
         'ritual-agent-wallet': {
           command: 'npx',
           args: ['-y', '@ritkey/mcp'],
-          env: {
-            RITKEY_API_URL: url,
-            RITKEY_API_KEY: key,
-          },
+          env: { RITKEY_API_URL: url, RITKEY_API_KEY: key },
         },
       },
     };
-
-    // VS Code uses `servers` and supports input prompts for secrets
     const vscodeCfg = {
-      inputs: [
-        {
-          id: 'ritkey-api-key',
-          type: 'promptString',
-          description: 'Ritkey API key',
-          password: true,
-        },
-      ],
+      inputs: [{ id: 'ritkey-api-key', type: 'promptString', description: 'Ritkey API key', password: true }],
       servers: {
         'ritual-agent-wallet': {
           type: 'stdio',
           command: 'npx',
           args: ['-y', '@ritkey/mcp'],
-          env: {
-            RITKEY_API_URL: url,
-            RITKEY_API_KEY: '${input:ritkey-api-key}',
-          },
+          env: { RITKEY_API_URL: url, RITKEY_API_KEY: '${input:ritkey-api-key}' },
         },
       },
     };
-
     return {
-      claude: JSON.stringify(mcpServersCfg, null, 2),
-      cursor: JSON.stringify(mcpServersCfg, null, 2),
-      cline: JSON.stringify(mcpServersCfg, null, 2),
+      claude:   JSON.stringify(mcpServersCfg, null, 2),
+      cursor:   JSON.stringify(mcpServersCfg, null, 2),
+      cline:    JSON.stringify(mcpServersCfg, null, 2),
       windsurf: JSON.stringify(mcpServersCfg, null, 2),
-      vscode: JSON.stringify(vscodeCfg, null, 2),
+      vscode:   JSON.stringify(vscodeCfg, null, 2),
     };
+  }
+
+  // ── Hosted-mode configs (mcp-remote bridge) ────────────
+  // Claude Desktop / stdio-only clients use mcp-remote as a local bridge.
+  // Cursor + VS Code can speak HTTP natively but we keep mcp-remote as the
+  // common path — works everywhere with a single npx dep.
+  function buildHostedConfigs() {
+    const { url, bearer } = hostedValues();
+    const authHeader = `Authorization: Bearer ${bearer}`;
+    const mcpRemoteCfg = {
+      mcpServers: {
+        'ritual-agent-wallet': {
+          command: 'npx',
+          args: ['-y', 'mcp-remote', url, '--header', authHeader],
+        },
+      },
+    };
+    const vscodeCfg = {
+      inputs: [{ id: 'ritkey-bearer', type: 'promptString', description: 'Ritkey MCP bearer token', password: true }],
+      servers: {
+        'ritual-agent-wallet': {
+          type: 'stdio',
+          command: 'npx',
+          args: ['-y', 'mcp-remote', url, '--header', 'Authorization: Bearer ${input:ritkey-bearer}'],
+        },
+      },
+    };
+    return {
+      claude:   JSON.stringify(mcpRemoteCfg, null, 2),
+      cursor:   JSON.stringify(mcpRemoteCfg, null, 2),
+      cline:    JSON.stringify(mcpRemoteCfg, null, 2),
+      windsurf: JSON.stringify(mcpRemoteCfg, null, 2),
+      vscode:   JSON.stringify(vscodeCfg, null, 2),
+    };
+  }
+
+  function buildConfigs() {
+    return currentMode === 'hosted' ? buildHostedConfigs() : buildLocalConfigs();
   }
 
   // Syntax highlight a JSON string into HTML
   function highlight(json) {
-    // Escape HTML
     const escaped = json
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
     return escaped
-      // strings used as keys: "key":
       .replace(/("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")(\s*:)/g, '<span class="key">$1</span>$3')
-      // other strings
       .replace(/(:\s*)("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")/g, '$1<span class="str">$2</span>')
-      // string values inside arrays
       .replace(/(\[\s*|,\s*)("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")/g, '$1<span class="str">$2</span>')
-      // numbers / booleans / null
       .replace(/(:\s*)(true|false|null|-?\d+(?:\.\d+)?)/g, '$1<span class="num-tok">$2</span>');
   }
 
@@ -498,11 +571,25 @@
     }
   }
 
-  apiUrlEl.addEventListener('input', () => { save(); render(); });
-  apiKeyEl.addEventListener('input', () => { save(); render(); });
+  [apiUrlEl, apiKeyEl, mcpUrlEl, bearerEl].forEach((el) => {
+    el.addEventListener('input', () => { save(); render(); });
+  });
+
+  // Mode toggle (hosted ↔ local)
+  const modeBtns   = document.querySelectorAll('.mode-btn');
+  const modePanels = document.querySelectorAll('.mode-panel');
+  function applyMode(mode) {
+    currentMode = mode;
+    modeBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    modePanels.forEach((p) => p.classList.toggle('active', p.dataset.modePanel === mode));
+    save();
+    render();
+  }
+  modeBtns.forEach((b) => b.addEventListener('click', () => applyMode(b.dataset.mode)));
+  applyMode(currentMode);
 
   // Tabs
-  const tabs = document.querySelectorAll('.tab');
+  const tabs   = document.querySelectorAll('.tab');
   const panels = document.querySelectorAll('.panel-set');
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
