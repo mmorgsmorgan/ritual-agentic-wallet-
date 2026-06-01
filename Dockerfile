@@ -14,6 +14,10 @@ COPY packages/service/package.json    packages/service/package.json
 COPY packages/crypto-rs/package.json  packages/crypto-rs/package.json
 RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
+# better-sqlite3's install script was skipped above — compile its native
+# binary now (this is what produces .../build/Release/better_sqlite3.node).
+RUN npm rebuild better-sqlite3 --build-from-source
+
 # Build @ritkey/crypto — the Rust NAPI module. Must run before @ritkey/core
 # compiles, since core imports from it.
 COPY packages/crypto-rs packages/crypto-rs
