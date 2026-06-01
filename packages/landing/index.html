@@ -144,6 +144,7 @@
   <header>
     <div class="logo"><span class="glyph">⬡</span> ritkey</div>
     <nav>
+      <a href="/mcp">MCP installer</a>
       <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">GitHub</a>
       <a href="https://www.npmjs.com/package/@ritkey/sdk">SDK</a>
       <a href="https://www.npmjs.com/package/@ritkey/cli">CLI</a>
@@ -204,7 +205,7 @@ ritkey alert new --wallet ID --kind spend_threshold --threshold 0.5</pre>
   </div>
 
   <h2><span class="num">3.</span>Plug into Claude / Cursor (MCP)</h2>
-  <p>Give your agent direct tool access — 25 tools for wallets, events, alerts, webhooks. Add this to your MCP client config:</p>
+  <p>Give your agent direct tool access — 25 tools for wallets, events, alerts, webhooks. <a href="/mcp">→ Interactive installer for Claude Desktop, Cursor, Cline, Windsurf, VS Code</a>, or paste the config below:</p>
   <div class="card">
     <div class="card-head">claude_desktop_config.json<button class="copy-btn" data-copy='{"mcpServers":{"ritual-agent-wallet":{"command":"npx","args":["@ritkey/mcp"],"env":{"RITKEY_API_URL":"https://your-ritkey-service","RITKEY_API_KEY":"YOUR_KEY"}}}}'>Copy</button></div>
 <pre>{
