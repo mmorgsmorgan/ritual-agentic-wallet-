@@ -25,6 +25,28 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* Full-bleed video background + dim overlay so text stays readable. */
+  .bg-video {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    object-fit: cover;
+    z-index: -2;
+    pointer-events: none;
+  }
+  .bg-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, rgba(11,13,16,0.78) 0%, rgba(11,13,16,0.88) 100%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .card, .field input, p code {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   .wrap { max-width: 920px; margin: 0 auto; padding: 56px 24px 96px; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
@@ -194,6 +216,10 @@
 </style>
 </head>
 <body>
+<video class="bg-video" autoplay muted loop playsinline preload="auto" poster="data:image/gif;base64,R0lGODlhAQABAAAAACw=">
+  <source src="/assets/key-bg.mp4" type="video/mp4">
+</video>
+<div class="bg-overlay"></div>
 <div class="wrap">
 
   <header>
