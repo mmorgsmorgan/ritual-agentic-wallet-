@@ -1,0 +1,30 @@
+{
+  "name": "@ritkey/core",
+  "version": "1.0.0",
+  "description": "Core MPC wallet library - key generation, threshold splitting, signing, encryption",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ritkey/crypto": "file:../crypto-rs",
+    "@noble/curves": "^1.8.2",
+    "@noble/hashes": "^1.7.2",
+    "viem": "^2.31.3",
+    "zod": "^3.25.11"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.7"
+  }
+}
