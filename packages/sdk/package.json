@@ -1,0 +1,56 @@
+{
+  "name": "@ritkey/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Ritkey — wallet operations, webhooks, and event subscriptions",
+  "license": "MIT",
+  "author": "Chiefmmorgs <chiefmmorgs@gmail.com>",
+  "homepage": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/mmorgsmorgan/ritual-agentic-wallet-/issues"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ritkey",
+    "ritual",
+    "wallet",
+    "sdk",
+    "mpc",
+    "webhooks",
+    "ai-agents",
+    "ethereum"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}
