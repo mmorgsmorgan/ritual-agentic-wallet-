@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background-color: #0a0908;
+  color: #e8dcc4;
+  min-height: 100vh;
+}
+
+/* ── Video background ────────────────────────────────────────── */
+.bg-video {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Warm vignette so gold elements stay luminous in the center */
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, rgba(10, 9, 8, 0.35) 0%, rgba(10, 9, 8, 0.75) 60%, rgba(10, 9, 8, 0.92) 100%),
+    linear-gradient(180deg, rgba(10, 9, 8, 0.35) 0%, rgba(10, 9, 8, 0.55) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-video { display: none; }
+  .bg-overlay {
+    background: linear-gradient(180deg, rgba(10, 9, 8, 0.94), rgba(10, 9, 8, 0.97));
+  }
+  *, *::before, *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+}
+
+@media print {
+  .bg-video, .bg-overlay { display: none; }
+}
+
+/* ── Reusable surface treatments ────────────────────────────── */
+@layer components {
+  .frost {
+    background-color: rgba(26, 20, 16, 0.72);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border: 1px solid rgba(212, 162, 76, 0.15);
+  }
+  .frost-strong {
+    background-color: rgba(18, 14, 10, 0.85);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(212, 162, 76, 0.22);
+  }
+  .gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      #d4a24c 0%,
+      #f4e4bc 25%,
+      #d4a24c 50%,
+      #c08a30 75%,
+      #d4a24c 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s ease-in-out infinite;
+  }
+}
+
+/* JSON syntax tokens — used inside <pre> code blocks. */
+.tok-key { color: #f4e4bc; }
+.tok-str { color: #e8cd8a; }
+.tok-num { color: #d4a24c; }
+.tok-com { color: #94887a; }
