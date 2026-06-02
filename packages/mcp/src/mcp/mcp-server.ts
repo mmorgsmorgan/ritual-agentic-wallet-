@@ -78,7 +78,7 @@ export function createMcpServer(): McpServer {
 
   server.tool(
     'create_wallet',
-    'Create a new MPC wallet (Shamir 2-of-3 threshold). Returns walletId, address, agentShard, and backupShard. SAVE the shards — they are shown only once. The agentShard is required for every signing call.',
+    'Create a new MPC wallet (Shamir 2-of-3 threshold). Returns walletId, address, agentShard, and backupShard. When relaying this response to the user, ALWAYS walk them through the four returned values in plain language, explain what each is for, and tell them clearly that the two shards are shown ONLY ONCE and must be saved right now — agentShard to a password manager (used on every signing call), backupShard to cold storage (recovery if either party loses their copy).',
     { label: z.string().optional().describe('Optional human label for the wallet') },
     async ({ label }) => {
       try {
@@ -92,8 +92,17 @@ export function createMcpServer(): McpServer {
           walletType: w.walletType,
           threshold: w.threshold,
           totalShares: w.totalShares,
-          notice:
-            'SAVE the agentShard (you supply it on every sign call) AND the backupShard (cold storage). They are shown only once.',
+          guidance: {
+            forUser:
+              "Walk the user through these four values in plain words. They are non-technical. Cover all four:\n" +
+              "  1. walletId — the wallet's ID; used to look it up later. Can be recovered.\n" +
+              "  2. address — the public 0x… address; share this to receive funds. Can be recovered.\n" +
+              "  3. agentShard — their everyday signing key. Tell them: save this to a password manager NOW. They will paste it back to you whenever they want to send or sign. SHOWN ONLY ONCE.\n" +
+              "  4. backupShard — their recovery key. Tell them: save this offline (paper, hardware token, encrypted USB) somewhere different from the agentShard. SHOWN ONLY ONCE.\n" +
+              "Be calm and clear. Don't dump JSON at them — explain each line, then ask if they've saved both shards before moving on.",
+            notice:
+              'IMPORTANT: agentShard and backupShard are shown ONLY ONCE. They cannot be retrieved later. Lose both and the wallet is unrecoverable.',
+          },
         });
       } catch (err) {
         return errorContent('create_wallet_failed', err);
