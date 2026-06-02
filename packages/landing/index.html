@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ritkey — MPC wallets for AI agents</title>
-<meta name="description" content="MPC wallet infrastructure for AI agents on Ritual Chain. Threshold signatures, webhooks, alerts, MCP integration.">
-<style>
+<title>Ritkey — MPC wallets for AI agents, one-click MCP install</title>
+<meta name="description" content="Threshold-signed wallets on Ritual Chain that your agent can drive over HTTP or MCP. One-click install for Claude, Cursor, Cline, Windsurf, and VS Code."><style>
   :root {
     --bg: #0b0d10;
     --fg: #e6e6e6;
@@ -13,8 +12,11 @@
     --accent: #ffb547;
     --accent-2: #4fd1c5;
     --panel: #14171c;
+    --panel-2: #181c22;
     --border: #1f242c;
+    --border-strong: #2a313b;
     --code: #0e1116;
+    --danger: #ff6b6b;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
@@ -36,13 +38,12 @@
   }
   .bg-overlay {
     position: fixed; inset: 0;
-    background: linear-gradient(180deg, rgba(11,13,16,0.78) 0%, rgba(11,13,16,0.88) 100%);
+    background: linear-gradient(180deg, rgba(11,13,16,0.45) 0%, rgba(11,13,16,0.65) 100%);
     z-index: -1;
     pointer-events: none;
   }
 
-  /* Frosted panels read better over video than solid panels. */
-  .card, p code {
+  .card, .field input, p code {
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
@@ -57,118 +58,180 @@
   @media print {
     .bg-video, .bg-overlay { display: none; }
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 24px 96px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 56px 24px 96px; }
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
   .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .logo .glyph { color: var(--accent); }
+  .logo a { color: var(--fg); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .logo img { width: 32px; height: 32px; object-fit: contain; display: block; }
   nav a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
   nav a:hover { color: var(--fg); }
 
-  h1 {
-    font-size: 2.6rem;
-    line-height: 1.15;
-    margin: 0 0 14px;
-    letter-spacing: -0.02em;
-  }
+  h1 { font-size: 2.6rem; line-height: 1.15; margin: 0 0 14px; letter-spacing: -0.02em; }
   h1 .accent { color: var(--accent); }
-  .lede {
-    font-size: 1.15rem;
-    color: var(--muted);
-    max-width: 60ch;
-    margin: 0 0 36px;
-  }
+  .lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; margin: 0 0 36px; }
 
   .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 48px; }
   .badge {
     display: inline-flex; align-items: center; gap: 6px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 4px 10px;
-    border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--muted); padding: 4px 10px; border-radius: 999px;
     font-size: 0.78rem;
     font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   }
   .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); display: inline-block; }
 
-  h2 {
-    font-size: 1.35rem;
-    margin: 48px 0 14px;
-    letter-spacing: -0.01em;
-  }
+  h2 { font-size: 1.35rem; margin: 48px 0 14px; letter-spacing: -0.01em; }
   h2 .num { color: var(--muted); font-weight: 400; margin-right: 8px; }
 
+  p { color: var(--muted); max-width: 65ch; }
+  p code { background: var(--panel); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; color: var(--fg); font-size: 0.85em; }
+  ul { color: var(--muted); padding-left: 20px; max-width: 65ch; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.78rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .field input {
+    background: var(--panel); border: 1px solid var(--border);
+    color: var(--fg); padding: 10px 12px; border-radius: 6px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.9rem;
+    transition: border-color 0.15s;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .field input::placeholder { color: #4a505a; }
+
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    background: transparent; border: none; color: var(--muted);
+    padding: 10px 16px; cursor: pointer; font-family: inherit;
+    font-size: 0.88rem;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { color: var(--fg); }
+  .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+  .tab .icon { width: 14px; height: 14px; display: inline-block; }
+
   .card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 0;
-    margin: 0 0 20px;
-    overflow: hidden;
+    background: rgba(20, 23, 28, 0.78); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0; margin: 0 0 20px; overflow: hidden;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   }
   .card-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    color: var(--muted); font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    background: rgba(14, 17, 22, 0.55);
   }
   .copy-btn {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-family: inherit;
-    transition: all 0.15s;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); cursor: pointer;
+    padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+    font-family: inherit; transition: all 0.15s;
   }
   .copy-btn:hover { color: var(--fg); border-color: var(--accent); }
   .copy-btn.copied { color: var(--accent-2); border-color: var(--accent-2); }
+
+  .path {
+    background: var(--panel-2); border-bottom: 1px solid var(--border);
+    padding: 8px 16px; color: var(--muted); font-size: 0.78rem;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .path strong { color: var(--fg); font-weight: 500; }
+  .path .os { color: var(--muted); }
+  .path-row { display: flex; flex-direction: column; gap: 2px; }
 
   pre, code {
     font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
     font-size: 0.88rem;
   }
   pre {
-    margin: 0;
-    padding: 16px;
-    background: var(--code);
-    color: var(--fg);
-    overflow-x: auto;
-    line-height: 1.6;
+    margin: 0; padding: 16px; background: transparent;
+    color: var(--fg); overflow-x: auto; line-height: 1.6;
+    white-space: pre;
   }
   .key { color: #c9b8ff; }
   .str { color: #b5e8a1; }
   .com { color: var(--muted); }
+  .num-tok { color: #ffb547; }
 
-  p { color: var(--muted); max-width: 65ch; }
-  p code { background: var(--panel); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; color: var(--fg); }
-  ul { color: var(--muted); padding-left: 20px; max-width: 65ch; }
-  li { margin: 4px 0; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  .panel-set { display: none; }
+  .panel-set.active { display: block; }
+
+  .mode-toggle {
+    display: inline-flex; gap: 4px; padding: 4px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; margin: 0 0 18px;
+  }
+  .mode-btn {
+    background: transparent; border: none; color: var(--muted);
+    padding: 8px 16px; cursor: pointer; font-family: inherit;
+    font-size: 0.88rem; border-radius: 6px;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { color: var(--fg); }
+  .mode-btn.active { background: var(--code); color: var(--fg); }
+
+  .mode-panel { display: none; }
+  .mode-panel.active { display: block; }
+
+  .tools-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px; margin: 16px 0 0;
+  }
+  .tool {
+    background: rgba(20, 23, 28, 0.78); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 6px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.82rem; color: var(--fg);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  h3.tool-group {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-2);
+    margin: 28px 0 10px;
+    font-weight: 600;
+  }
+
+  .note {
+    background: var(--panel-2);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px; margin: 16px 0;
+    color: var(--muted); font-size: 0.9rem;
+    border-radius: 0 6px 6px 0;
+  }
+  .note strong { color: var(--fg); }
 
   footer {
-    margin-top: 80px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    color: var(--muted);
-    font-size: 0.85rem;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+    margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--border);
+    color: var(--muted); font-size: 0.85rem;
+    display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
   }
 
   @media (max-width: 600px) {
     h1 { font-size: 2rem; }
     .wrap { padding: 36px 18px 64px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .tab { white-space: nowrap; }
   }
 </style>
 </head>
@@ -181,104 +244,318 @@
 <div class="wrap">
 
   <header>
-    <div class="logo"><span class="glyph">⬡</span> ritkey</div>
+    <div class="logo">
+      <a href="/">
+        <picture>
+          <source srcset="/assets/logo.webp" type="image/webp">
+          <img src="/assets/logo.png" alt="ritkey logo" width="32" height="32">
+        </picture>
+        ritkey
+      </a>
+    </div>
     <nav>
-      <a href="/mcp">MCP installer</a>
       <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">GitHub</a>
-      <a href="https://www.npmjs.com/package/@ritkey/sdk">SDK</a>
-      <a href="https://www.npmjs.com/package/@ritkey/cli">CLI</a>
+      <a href="https://www.npmjs.com/package/@ritkey/mcp">npm</a>
     </nav>
   </header>
 
-  <h1>MPC wallets <span class="accent">for AI agents</span></h1>
+  <h1>Ritual Agent Wallet</h1>
   <p class="lede">
-    Threshold-signed wallets on Ritual Chain that your agent can drive over HTTP, MCP, or a CLI.
-    No browser extension. No seed phrase the agent can leak. Webhooks + alerts for everything that matters.
+    MPC wallets built for AI agents on Ritual Chain. Give your AI agents secure,
+    threshold-signed wallets they can control through HTTP APIs or MCP. No browser
+    extensions. No exposed seed phrases. Full webhook and alert support for every
+    critical wallet event.
   </p>
 
   <div class="badges">
-    <span class="badge"><span class="dot"></span> Shamir 2-of-3</span>
-    <span class="badge">Webhooks (HMAC)</span>
-    <span class="badge">Alert rules</span>
-    <span class="badge">MCP-ready</span>
-    <span class="badge">MIT</span>
+    <span class="badge"><span class="dot"></span> Shamir 2-of-3 MPC</span>
+    <span class="badge">HMAC-secured webhooks</span>
+    <span class="badge">Real-time alert rules</span>
+    <span class="badge">MCP compatible</span>
+    <span class="badge">MIT Licensed</span>
   </div>
 
-  <h2><span class="num">1.</span>Install the SDK</h2>
-  <p>Drop into any TypeScript/JS agent. Zero runtime deps. Works in Node 18+, Cloudflare Workers, Vercel, Deno.</p>
+  <h2>Connect Your Agent in Minutes</h2>
+  <p>Works with <strong>Claude Desktop</strong>, <strong>Cursor</strong>, <strong>Cline</strong>, <strong>Windsurf</strong>, and <strong>VS Code</strong>. Install with a single configuration and start managing wallets immediately.</p>
+
+  <h2>Transport Options</h2>
+  <p>Pick how the MCP server runs. Hosted is recommended — no Node install required, ready in seconds. Local gives you full control on your own machine.</p>
+
+  <div class="mode-toggle" id="modeToggle">
+    <button class="mode-btn active" data-mode="hosted">Hosted MCP (Recommended)</button>
+    <button class="mode-btn" data-mode="local">Local MCP</button>
+  </div>
+
+  <!-- Hosted mode form -->
+  <div class="mode-panel active" data-mode-panel="hosted">
+    <p>Instant setup. No Node.js installation required. Authenticate every request with a bearer token.</p>
+    <div class="form-grid">
+      <div class="field">
+        <label for="mcpUrl">MCP Endpoint</label>
+        <input id="mcpUrl" type="text" placeholder="https://zooming-gentleness-production-0d17.up.railway.app/mcp" autocomplete="off" spellcheck="false" value="https://zooming-gentleness-production-0d17.up.railway.app/mcp">
+      </div>
+      <div class="field">
+        <label for="bearerToken">Bearer Token</label>
+        <input id="bearerToken" type="text" placeholder="hex…" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="note">
+      <strong>Don't have a token?</strong> Use the public demo endpoint above and ask the maintainer for a bearer token.
+    </div>
+  </div>
+
+  <!-- Local mode form -->
+  <div class="mode-panel" data-mode-panel="local">
+    <p>Run the MCP server directly on your machine using Node.js 18+ for maximum control and customization.</p>
+    <div class="form-grid">
+      <div class="field">
+        <label for="apiUrl">RITKEY_API_URL</label>
+        <input id="apiUrl" type="text" placeholder="https://your-ritkey-service" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="apiKey">RITKEY_API_KEY</label>
+        <input id="apiKey" type="text" placeholder="rk_…" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="note">
+      <strong>No service yet?</strong> Run <code>npm install &amp;&amp; npm run dev:service</code> from the
+      <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">monorepo</a> and use
+      <code>http://localhost:3000</code>. The first run prints an admin key — that's your <code>RITKEY_API_KEY</code>.
+    </div>
+  </div>
+
+  <h2>Pick Your Client</h2>
+  <p>Choose where you want the MCP installed. The config and the file path update for the client you select.</p>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-client="claude">Claude Desktop</button>
+    <button class="tab" data-client="cursor">Cursor</button>
+    <button class="tab" data-client="cline">Cline</button>
+    <button class="tab" data-client="windsurf">Windsurf</button>
+    <button class="tab" data-client="vscode">VS Code</button>
+  </div>
+
+  <!-- Claude Desktop -->
+  <div class="panel-set active" data-panel="claude">
+    <div class="card">
+      <div class="path">
+        <div class="path-row">
+          <span class="os">macOS</span>
+          <strong>~/Library/Application Support/Claude/claude_desktop_config.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path="~/Library/Application Support/Claude/claude_desktop_config.json">Copy path</button>
+      </div>
+      <div class="path">
+        <div class="path-row">
+          <span class="os">Windows</span>
+          <strong>%APPDATA%\Claude\claude_desktop_config.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path="%APPDATA%\Claude\claude_desktop_config.json">Copy path</button>
+      </div>
+      <div class="card-head">
+        claude_desktop_config.json
+        <button class="copy-btn" data-copy-target="cfg-claude">Copy config</button>
+      </div>
+      <pre id="cfg-claude"></pre>
+    </div>
+    <p>Restart Claude Desktop after saving. Look for the hammer icon → <strong>ritual-agent-wallet</strong>.</p>
+  </div>
+
+  <!-- Cursor -->
+  <div class="panel-set" data-panel="cursor">
+    <div class="card">
+      <div class="path">
+        <div class="path-row">
+          <span class="os">Global</span>
+          <strong>~/.cursor/mcp.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path="~/.cursor/mcp.json">Copy path</button>
+      </div>
+      <div class="path">
+        <div class="path-row">
+          <span class="os">Per-project</span>
+          <strong>.cursor/mcp.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path=".cursor/mcp.json">Copy path</button>
+      </div>
+      <div class="card-head">
+        mcp.json
+        <button class="copy-btn" data-copy-target="cfg-cursor">Copy config</button>
+      </div>
+      <pre id="cfg-cursor"></pre>
+    </div>
+    <p>Then in Cursor: <strong>Settings → MCP</strong>. The server should auto-load — toggle it on if needed.</p>
+  </div>
+
+  <!-- Cline -->
+  <div class="panel-set" data-panel="cline">
+    <div class="card">
+      <div class="path">
+        <div class="path-row">
+          <span class="os">VS Code extension settings</span>
+          <strong>cline_mcp_settings.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path="cline_mcp_settings.json">Copy filename</button>
+      </div>
+      <div class="card-head">
+        cline_mcp_settings.json
+        <button class="copy-btn" data-copy-target="cfg-cline">Copy config</button>
+      </div>
+      <pre id="cfg-cline"></pre>
+    </div>
+    <p>In VS Code, open the Cline panel → <strong>MCP Servers</strong> → <strong>Edit MCP Settings</strong>, then paste.</p>
+  </div>
+
+  <!-- Windsurf -->
+  <div class="panel-set" data-panel="windsurf">
+    <div class="card">
+      <div class="path">
+        <div class="path-row">
+          <span class="os">Global</span>
+          <strong>~/.codeium/windsurf/mcp_config.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path="~/.codeium/windsurf/mcp_config.json">Copy path</button>
+      </div>
+      <div class="card-head">
+        mcp_config.json
+        <button class="copy-btn" data-copy-target="cfg-windsurf">Copy config</button>
+      </div>
+      <pre id="cfg-windsurf"></pre>
+    </div>
+    <p>Then <strong>Cascade panel → MCP → Refresh</strong>. The tools show up under <code>ritual-agent-wallet</code>.</p>
+  </div>
+
+  <!-- VS Code -->
+  <div class="panel-set" data-panel="vscode">
+    <div class="card">
+      <div class="path">
+        <div class="path-row">
+          <span class="os">Per-project (recommended)</span>
+          <strong>.vscode/mcp.json</strong>
+        </div>
+        <button class="copy-btn" data-copy-path=".vscode/mcp.json">Copy path</button>
+      </div>
+      <div class="card-head">
+        .vscode/mcp.json
+        <button class="copy-btn" data-copy-target="cfg-vscode">Copy config</button>
+      </div>
+      <pre id="cfg-vscode"></pre>
+    </div>
+    <p>
+      Open Copilot Chat → <strong>Agent mode</strong> → click the tools picker.
+      You'll be prompted for the API key the first time (it's stored in VS Code's secret storage).
+    </p>
+  </div>
+
+  <h2>Example Prompt</h2>
+  <p>After installation, your AI agent can perform wallet operations naturally.</p>
   <div class="card">
-    <div class="card-head">terminal<button class="copy-btn" data-copy="npm install @ritkey/sdk">Copy</button></div>
-<pre><span class="com"># Install</span>
-npm install @ritkey/sdk
-
-<span class="com"># Use</span>
-<span class="key">import</span> { RitkeyClient } <span class="key">from</span> <span class="str">'@ritkey/sdk'</span>;
-
-<span class="key">const</span> client = <span class="key">new</span> RitkeyClient({
-  baseUrl: <span class="str">'https://your-ritkey-service'</span>,
-  apiKey: process.env.RITKEY_API_KEY,
-});
-
-<span class="key">const</span> wallet = <span class="key">await</span> client.wallets.create({ label: <span class="str">'agent-7'</span> });
-console.log(wallet.address);     <span class="com">// 0x...</span>
-console.log(wallet.agentShard);  <span class="com">// save this</span></pre>
+    <div class="card-head">prompt<button class="copy-btn" data-copy="Use the ritual-agent-wallet MCP to create a wallet named 'test-1' and show me its address and balance.">Copy</button></div>
+<pre>Use the ritual-agent-wallet MCP to create a wallet named
+'test-1' and show me its address and balance.</pre>
   </div>
 
-  <h2><span class="num">2.</span>Install the CLI</h2>
-  <p>For operators. Inspect wallets, balances, events, alerts from the terminal.</p>
-  <div class="card">
-    <div class="card-head">terminal<button class="copy-btn" data-copy="npm install -g @ritkey/cli">Copy</button></div>
-<pre><span class="com"># Global install</span>
-npm install -g @ritkey/cli
+  <h2>Available Tools</h2>
+  <p>25 built-in tools designed specifically for agentic applications.</p>
 
-<span class="com"># Or one-off</span>
-npx @ritkey/cli wallets
-
-<span class="com"># Configure once</span>
-ritkey login --url https://your-ritkey-service --key YOUR_KEY
-
-<span class="com"># Then</span>
-ritkey wallets
-ritkey events watch
-ritkey alert new --wallet ID --kind spend_threshold --threshold 0.5</pre>
+  <h3 class="tool-group">Wallet Management</h3>
+  <div class="tools-grid">
+    <div class="tool">create_wallet</div>
+    <div class="tool">import_wallet</div>
+    <div class="tool">list_wallets</div>
+    <div class="tool">get_wallet_info</div>
+    <div class="tool">get_balance</div>
+    <div class="tool">send_transaction</div>
+    <div class="tool">sign_message</div>
+    <div class="tool">fund_wallet</div>
+    <div class="tool">export_key</div>
+    <div class="tool">sweep_and_archive</div>
   </div>
 
-  <h2><span class="num">3.</span>Plug into Claude / Cursor (MCP)</h2>
-  <p>Give your agent direct tool access — 25 tools for wallets, events, alerts, webhooks. <a href="/mcp">→ Interactive installer for Claude Desktop, Cursor, Cline, Windsurf, VS Code</a>, or paste the config below:</p>
-  <div class="card">
-    <div class="card-head">claude_desktop_config.json<button class="copy-btn" data-copy='{"mcpServers":{"ritual-agent-wallet":{"command":"npx","args":["@ritkey/mcp"],"env":{"RITKEY_API_URL":"https://your-ritkey-service","RITKEY_API_KEY":"YOUR_KEY"}}}}'>Copy</button></div>
-<pre>{
-  <span class="key">"mcpServers"</span>: {
-    <span class="key">"ritual-agent-wallet"</span>: {
-      <span class="key">"command"</span>: <span class="str">"npx"</span>,
-      <span class="key">"args"</span>: [<span class="str">"@ritkey/mcp"</span>],
-      <span class="key">"env"</span>: {
-        <span class="key">"RITKEY_API_URL"</span>: <span class="str">"https://your-ritkey-service"</span>,
-        <span class="key">"RITKEY_API_KEY"</span>: <span class="str">"YOUR_KEY"</span>
-      }
-    }
-  }
-}</pre>
+  <h3 class="tool-group">Webhooks</h3>
+  <div class="tools-grid">
+    <div class="tool">create_webhook</div>
+    <div class="tool">list_webhooks</div>
+    <div class="tool">update_webhook</div>
+    <div class="tool">delete_webhook</div>
+    <div class="tool">test_webhook</div>
   </div>
 
-  <h2>What's in the box</h2>
+  <h3 class="tool-group">Alert Rules</h3>
+  <div class="tools-grid">
+    <div class="tool">create_alert_rule</div>
+    <div class="tool">list_alert_rules</div>
+    <div class="tool">update_alert_rule</div>
+    <div class="tool">delete_alert_rule</div>
+  </div>
+
+  <h3 class="tool-group">Events</h3>
+  <div class="tools-grid">
+    <div class="tool">list_events</div>
+  </div>
+
+  <h3 class="tool-group">Ritual Skills</h3>
+  <div class="tools-grid">
+    <div class="tool">list_ritual_skills</div>
+    <div class="tool">read_ritual_skill</div>
+    <div class="tool">read_ritual_rules</div>
+  </div>
+
+  <h3 class="tool-group">Network Information</h3>
+  <div class="tools-grid">
+    <div class="tool">get_chain_info</div>
+  </div>
+
+  <h2>Security First</h2>
+
+  <h3 class="tool-group">Threshold Signing</h3>
+  <p>Powered by Shamir 2-of-3 secret sharing.</p>
   <ul>
-    <li><strong>Threshold signing.</strong> Shamir 2-of-3. Server holds one share, you hold the agent share, cold storage holds the third.</li>
-    <li><strong>Webhooks.</strong> HMAC-signed (Stripe scheme). SSRF defense, DNS rebinding protection, exponential retry. <code>verifyWebhook()</code> helper in the SDK.</li>
-    <li><strong>Alert rules.</strong> <code>spend_threshold</code>, <code>unusual_recipient</code>, <code>key_export_warning</code>, <code>balance_low</code> — all delivered through your webhooks.</li>
-    <li><strong>Import / export.</strong> Bring your own private key, or export to MetaMask / Rabby (archives the wallet automatically).</li>
-    <li><strong>Sybil defense.</strong> One wallet per API key by default.</li>
+    <li>Server holds one key share</li>
+    <li>Agent holds one key share</li>
+    <li>Cold storage holds one key share</li>
+  </ul>
+  <p>No single participant can authorize transactions alone.</p>
+
+  <h3 class="tool-group">Secure Webhooks</h3>
+  <ul>
+    <li>HMAC signature verification</li>
+    <li>SSRF protection</li>
+    <li>DNS rebinding protection</li>
+    <li>Exponential retry delivery</li>
   </ul>
 
-  <h2>Self-host the service</h2>
-  <p>The wallet service is in the same repo — run it locally, on Railway, on Fly, wherever. Then point SDK / CLI / MCP at it:</p>
-  <div class="card">
-    <div class="card-head">terminal<button class="copy-btn" data-copy="git clone https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git">Copy</button></div>
-<pre>git clone https://github.com/mmorgsmorgan/ritual-agentic-wallet-.git
-cd ritual-agentic-wallet-
-npm install
-npm run dev:service</pre>
-  </div>
+  <h3 class="tool-group">Intelligent Alerts</h3>
+  <p>Receive notifications for:</p>
+  <ul>
+    <li>Spend threshold violations</li>
+    <li>Unusual recipients</li>
+    <li>Key export warnings</li>
+    <li>Low balance conditions</li>
+  </ul>
+
+  <h3 class="tool-group">Import and Export</h3>
+  <p>Bring your own private key or export wallets to MetaMask, Rabby, or other compatible wallets. Exported wallets are automatically archived for additional safety.</p>
+
+  <h3 class="tool-group">Sybil Protection</h3>
+  <p>One wallet per API key by default to prevent abuse and simplify wallet management.</p>
+
+  <h2>Troubleshooting</h2>
+
+  <h3 class="tool-group">Tools Not Appearing</h3>
+  <p>Completely restart your MCP client after installation. MCP servers launch during application startup.</p>
+
+  <h3 class="tool-group">"npx" Not Found</h3>
+  <p>Install Node.js 18 or newer from <a href="https://nodejs.org">nodejs.org</a>.</p>
+
+  <h3 class="tool-group">Authentication Errors</h3>
+  <ul>
+    <li><strong>Hosted Mode:</strong> verify your bearer token.</li>
+    <li><strong>Local Mode:</strong> verify that your <code>RITKEY_API_KEY</code> matches the key generated by your service.</li>
+  </ul>
+
+  <h2>Open Source</h2>
+  <p>Ritual Agent Wallet is released under the MIT License. Built for autonomous agents, AI applications, and Ritual-native dApps.</p>
 
   <footer>
     <div>MIT — <a href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-">github.com/mmorgsmorgan/ritual-agentic-wallet-</a></div>
@@ -287,20 +564,195 @@ npm run dev:service</pre>
 </div>
 
 <script>
-  document.querySelectorAll('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(btn.dataset.copy);
-        const old = btn.textContent;
-        btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(() => {
-          btn.textContent = old;
-          btn.classList.remove('copied');
-        }, 1500);
-      } catch {}
+  const apiUrlEl     = document.getElementById('apiUrl');
+  const apiKeyEl     = document.getElementById('apiKey');
+  const mcpUrlEl     = document.getElementById('mcpUrl');
+  const bearerEl     = document.getElementById('bearerToken');
+  const STORAGE_KEY  = 'ritkey-mcp-config';
+
+  let currentMode = 'hosted';
+
+  // Load saved values
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if (saved.apiUrl) apiUrlEl.value = saved.apiUrl;
+    if (saved.apiKey) apiKeyEl.value = saved.apiKey;
+    if (saved.mcpUrl) mcpUrlEl.value = saved.mcpUrl;
+    if (saved.bearer) bearerEl.value = saved.bearer;
+    if (saved.mode === 'local' || saved.mode === 'hosted') currentMode = saved.mode;
+  } catch {}
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        apiUrl: apiUrlEl.value,
+        apiKey: apiKeyEl.value,
+        mcpUrl: mcpUrlEl.value,
+        bearer: bearerEl.value,
+        mode: currentMode,
+      }));
+    } catch {}
+  }
+
+  function localValues() {
+    return {
+      url: apiUrlEl.value.trim() || 'https://your-ritkey-service',
+      key: apiKeyEl.value.trim() || 'YOUR_KEY',
+    };
+  }
+  function hostedValues() {
+    return {
+      url:    mcpUrlEl.value.trim() || 'https://zooming-gentleness-production-0d17.up.railway.app/mcp',
+      bearer: bearerEl.value.trim() || 'YOUR_BEARER_TOKEN',
+    };
+  }
+
+  // ── Local-mode configs (npx @ritkey/mcp) ───────────────
+  function buildLocalConfigs() {
+    const { url, key } = localValues();
+    const mcpServersCfg = {
+      mcpServers: {
+        'ritual-agent-wallet': {
+          command: 'npx',
+          args: ['-y', '@ritkey/mcp'],
+          env: { RITKEY_API_URL: url, RITKEY_API_KEY: key },
+        },
+      },
+    };
+    const vscodeCfg = {
+      inputs: [{ id: 'ritkey-api-key', type: 'promptString', description: 'Ritkey API key', password: true }],
+      servers: {
+        'ritual-agent-wallet': {
+          type: 'stdio',
+          command: 'npx',
+          args: ['-y', '@ritkey/mcp'],
+          env: { RITKEY_API_URL: url, RITKEY_API_KEY: '${input:ritkey-api-key}' },
+        },
+      },
+    };
+    return {
+      claude:   JSON.stringify(mcpServersCfg, null, 2),
+      cursor:   JSON.stringify(mcpServersCfg, null, 2),
+      cline:    JSON.stringify(mcpServersCfg, null, 2),
+      windsurf: JSON.stringify(mcpServersCfg, null, 2),
+      vscode:   JSON.stringify(vscodeCfg, null, 2),
+    };
+  }
+
+  // ── Hosted-mode configs (mcp-remote bridge) ────────────
+  // Claude Desktop / stdio-only clients use mcp-remote as a local bridge.
+  // Cursor + VS Code can speak HTTP natively but we keep mcp-remote as the
+  // common path — works everywhere with a single npx dep.
+  function buildHostedConfigs() {
+    const { url, bearer } = hostedValues();
+    const authHeader = `Authorization: Bearer ${bearer}`;
+    const mcpRemoteCfg = {
+      mcpServers: {
+        'ritual-agent-wallet': {
+          command: 'npx',
+          args: ['-y', 'mcp-remote', url, '--header', authHeader],
+        },
+      },
+    };
+    const vscodeCfg = {
+      inputs: [{ id: 'ritkey-bearer', type: 'promptString', description: 'Ritkey MCP bearer token', password: true }],
+      servers: {
+        'ritual-agent-wallet': {
+          type: 'stdio',
+          command: 'npx',
+          args: ['-y', 'mcp-remote', url, '--header', 'Authorization: Bearer ${input:ritkey-bearer}'],
+        },
+      },
+    };
+    return {
+      claude:   JSON.stringify(mcpRemoteCfg, null, 2),
+      cursor:   JSON.stringify(mcpRemoteCfg, null, 2),
+      cline:    JSON.stringify(mcpRemoteCfg, null, 2),
+      windsurf: JSON.stringify(mcpRemoteCfg, null, 2),
+      vscode:   JSON.stringify(vscodeCfg, null, 2),
+    };
+  }
+
+  function buildConfigs() {
+    return currentMode === 'hosted' ? buildHostedConfigs() : buildLocalConfigs();
+  }
+
+  // Syntax highlight a JSON string into HTML
+  function highlight(json) {
+    const escaped = json
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return escaped
+      .replace(/("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")(\s*:)/g, '<span class="key">$1</span>$3')
+      .replace(/(:\s*)("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")/g, '$1<span class="str">$2</span>')
+      .replace(/(\[\s*|,\s*)("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")/g, '$1<span class="str">$2</span>')
+      .replace(/(:\s*)(true|false|null|-?\d+(?:\.\d+)?)/g, '$1<span class="num-tok">$2</span>');
+  }
+
+  function render() {
+    const cfgs = buildConfigs();
+    for (const [client, json] of Object.entries(cfgs)) {
+      const el = document.getElementById(`cfg-${client}`);
+      if (el) el.innerHTML = highlight(json);
+    }
+  }
+
+  [apiUrlEl, apiKeyEl, mcpUrlEl, bearerEl].forEach((el) => {
+    el.addEventListener('input', () => { save(); render(); });
+  });
+
+  // Mode toggle (hosted ↔ local)
+  const modeBtns   = document.querySelectorAll('.mode-btn');
+  const modePanels = document.querySelectorAll('.mode-panel');
+  function applyMode(mode) {
+    currentMode = mode;
+    modeBtns.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    modePanels.forEach((p) => p.classList.toggle('active', p.dataset.modePanel === mode));
+    save();
+    render();
+  }
+  modeBtns.forEach((b) => b.addEventListener('click', () => applyMode(b.dataset.mode)));
+  applyMode(currentMode);
+
+  // Tabs
+  const tabs   = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel-set');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const client = tab.dataset.client;
+      tabs.forEach((t) => t.classList.toggle('active', t === tab));
+      panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === client));
     });
   });
+
+  // Copy buttons
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+      const old = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = old;
+        btn.classList.remove('copied');
+      }, 1500);
+    } catch {}
+  }
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.copy) {
+        copyText(btn.dataset.copy, btn);
+      } else if (btn.dataset.copyPath) {
+        copyText(btn.dataset.copyPath, btn);
+      } else if (btn.dataset.copyTarget) {
+        const el = document.getElementById(btn.dataset.copyTarget);
+        if (el) copyText(el.textContent, btn);
+      }
+    });
+  });
+
+  render();
 </script>
 </body>
 </html>

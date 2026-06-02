@@ -3,8 +3,7 @@
  *   node packages/landing/serve.mjs [port]
  *
  * Routes:
- *   /                → index.html
- *   /mcp             → mcp.html (interactive MCP installer)
+ *   /                → index.html (the single page)
  *   /assets/<file>   → static files under ./assets (video, images, etc.)
  */
 import http from 'node:http';
@@ -29,16 +28,12 @@ const MIME = {
   '.js':   'text/javascript; charset=utf-8',
 };
 
-const [indexHtml, mcpHtml] = await Promise.all([
-  readFile(path.join(__dirname, 'index.html')),
-  readFile(path.join(__dirname, 'mcp.html')),
-]);
+const indexHtml = await readFile(path.join(__dirname, 'index.html'));
 
 async function serveAsset(req, res) {
   const rel = req.url.replace(/^\/assets\//, '').split('?')[0];
   const assetsDir = path.join(__dirname, 'assets');
   const filePath = path.resolve(assetsDir, rel);
-  // Containment check — refuse anything that resolves outside assets/.
   if (!filePath.startsWith(assetsDir + path.sep) && filePath !== assetsDir) {
     res.writeHead(403).end();
     return;
@@ -68,17 +63,14 @@ const server = http.createServer(async (req, res) => {
   if (req.url.startsWith('/assets/')) {
     return serveAsset(req, res);
   }
-  const url = (req.url || '/').split('?')[0].replace(/\/$/, '') || '/';
-  let body = indexHtml;
-  if (url === '/mcp' || url === '/mcp.html') body = mcpHtml;
+  // Single-page: everything else serves index.html.
   res.writeHead(200, {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-cache',
   });
-  res.end(body);
+  res.end(indexHtml);
 });
 
 server.listen(port, () => {
   console.log(`Landing page → http://localhost:${port}`);
-  console.log(`MCP installer → http://localhost:${port}/mcp`);
 });
