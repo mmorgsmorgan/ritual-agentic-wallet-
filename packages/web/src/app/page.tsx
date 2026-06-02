@@ -148,9 +148,55 @@ export default function Home() {
           <div className="mt-6 rounded-lg border border-gold-700/30 bg-ink-200/50 p-4 text-sm text-cream-400">
             <strong className="text-cream-200">Heads up — shared demo:</strong>{' '}
             The default config uses a shared demo wallet. Everyone who copies it points at the same on-chain
-            address. Great for trying it out. For a wallet that&apos;s truly yours, expand <em>Advanced</em> above
-            and run your own service.
+            address. Great for trying things out, not for holding real funds.
           </div>
+        </section>
+      </SectionReveal>
+
+      {/* ── Get your own wallet (self-host) ───────────────────── */}
+      <SectionReveal>
+        <section className="mt-24">
+          <h2 className="font-display text-3xl text-cream-50 mb-3">Get Your Own Wallet</h2>
+          <p className="text-cream-300 mb-8 max-w-2xl">
+            Five minutes, ~$5/month. Deploy the wallet service to your own Railway account. Result: a
+            wallet that nobody else can touch — only your AI agent (with your saved keys) can sign for it.
+          </p>
+
+          <div className="frost rounded-xl p-6 mb-6">
+            <div className="grid sm:grid-cols-3 gap-6">
+              <Step n={1} title="Fork &amp; deploy">
+                Fork the repo on GitHub, then on Railway: <em>New Project → Deploy from GitHub repo</em>.
+              </Step>
+              <Step n={2} title="Add a 1 GB volume">
+                <em>Settings → Volumes → New Volume</em> at <code className="font-mono text-gold-200">/data</code>.
+                This is where your wallet lives.
+              </Step>
+              <Step n={3} title="Set two env vars">
+                <code className="font-mono text-gold-200">ENCRYPTION_KEY</code> and{' '}
+                <code className="font-mono text-gold-200">API_KEY</code> — generate each with one command (see runbook).
+              </Step>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <a
+              href="https://github.com/mmorgsmorgan/ritual-agentic-wallet-/blob/main/RAILWAY-DEPLOY.md"
+              className="inline-flex items-center gap-2 rounded-md bg-gold-300 text-ink-400 px-5 py-2.5 text-sm font-semibold hover:bg-gold-200 transition-colors"
+            >
+              Open the deploy runbook →
+            </a>
+            <a
+              href="https://railway.com/new"
+              className="inline-flex items-center gap-2 rounded-md border border-gold-700/40 bg-ink-200/60 px-5 py-2.5 text-sm font-mono text-cream-100 backdrop-blur-sm hover:border-gold-400 transition-colors"
+            >
+              Open Railway
+            </a>
+          </div>
+
+          <p className="mt-6 text-sm text-cream-400">
+            After it&apos;s up, expand <strong className="text-cream-200">Advanced</strong> in the installer
+            above, switch to <em>Local (self-hosted)</em>, and paste your service URL + key.
+          </p>
         </section>
       </SectionReveal>
 
@@ -308,6 +354,20 @@ function Card({ title, children, full = false }: { title: string; children: Reac
         {title}
       </h3>
       <div className="text-cream-200">{children}</div>
+    </div>
+  );
+}
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="font-display text-2xl text-gold-300 leading-none">{n}</span>
+        <span className="font-mono uppercase tracking-[0.14em] text-[11px] text-cream-300">
+          {title}
+        </span>
+      </div>
+      <p className="text-sm text-cream-300 leading-relaxed">{children}</p>
     </div>
   );
 }
