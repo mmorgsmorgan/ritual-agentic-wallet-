@@ -5,12 +5,13 @@ import { buildConfig, highlight, type Mode, type Client, CLIENTS, PATHS } from '
 import { CopyButton } from './CopyButton';
 
 const DEFAULT_MCP_URL = 'https://zooming-gentleness-production-0d17.up.railway.app/mcp';
-// Demo token baked into the page so consumers can copy-paste with zero blanks.
-// This is a SHARED demo identity — all anonymous users hit the same underlying
-// wallet on the service. For per-user wallets, future work issues a unique
-// token to each visitor.
+const CLAIM_URL = 'https://zooming-gentleness-production-0d17.up.railway.app/claim';
+// Fallback bearer used while a /claim request is in flight (or if claim
+// mode is off on the server). When claim mode is on, the first visit fetches
+// a personal bearer that maps to its own wallet on the service.
 const DEMO_BEARER = 'cae1457844e3b1a53c0f1a08131e8abe35981aa885d8541168e167522057028f';
 const STORAGE_KEY = 'ritkey-web-installer';
+const CLAIMED_BEARER_KEY = 'ritkey-claimed-bearer';
 
 const CARD_LABELS: Record<string, string> = {
   'claude':       'claude_desktop_config.json',
@@ -54,18 +55,48 @@ const DEFAULT_STATE: SavedState = {
   advanced: false,
 };
 
+type ClaimStatus = 'idle' | 'claiming' | 'claimed' | 'shared-fallback';
+
 export function Installer() {
   const [state, setState] = useState<SavedState>(DEFAULT_STATE);
+  const [claimStatus, setClaimStatus] = useState<ClaimStatus>('idle');
 
   // Hydrate from localStorage on mount only — never on the server.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<SavedState>;
-      setState((s) => ({ ...s, ...parsed }));
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<SavedState>;
+        setState((s) => ({ ...s, ...parsed }));
+      }
+      // If we already minted a personal bearer in a past visit, use it now.
+      const savedBearer = localStorage.getItem(CLAIMED_BEARER_KEY);
+      if (savedBearer) {
+        setState((s) => ({ ...s, bearer: savedBearer }));
+        setClaimStatus('claimed');
+        return;
+      }
+      // Otherwise try to mint one. Falls back silently to the demo bearer.
+      void claimPersonalBearer();
     } catch { /* ignore */ }
   }, []);
+
+  async function claimPersonalBearer() {
+    setClaimStatus('claiming');
+    try {
+      const res = await fetch(CLAIM_URL, { method: 'POST' });
+      if (!res.ok) throw new Error(`claim ${res.status}`);
+      const data = (await res.json()) as { bearer: string };
+      if (!data.bearer || typeof data.bearer !== 'string') throw new Error('no bearer');
+      localStorage.setItem(CLAIMED_BEARER_KEY, data.bearer);
+      setState((s) => ({ ...s, bearer: data.bearer }));
+      setClaimStatus('claimed');
+    } catch {
+      // Server may have ENABLE_CLAIM=false, network may be blocked, etc.
+      // Keep the demo bearer and surface the fallback in the UI.
+      setClaimStatus('shared-fallback');
+    }
+  }
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
@@ -112,6 +143,8 @@ export function Installer() {
             </button>
           ))}
         </div>
+
+        <ClaimBadge status={claimStatus} />
 
         <div className="frost rounded-xl overflow-hidden animate-fade-in" key={state.client}>
           {/* CLI clients show "Paste in terminal" hint; JSON clients show file path(s) */}
@@ -228,6 +261,27 @@ function Field({ label, value, placeholder, onChange }: { label: string; value: 
         className="rounded-md border border-gold-700/40 bg-ink-200/80 px-3 py-2.5 text-sm font-mono text-cream-100 placeholder:text-cream-500 focus:border-gold-300 focus:outline-none focus:ring-1 focus:ring-gold-300/40 transition-colors backdrop-blur-sm"
       />
     </label>
+  );
+}
+
+function ClaimBadge({ status }: { status: ClaimStatus }) {
+  if (status === 'idle') return null;
+
+  const styles: Record<ClaimStatus, { dot: string; ring: string; label: string; sub: string }> = {
+    idle:             { dot: '', ring: '', label: '', sub: '' },
+    claiming:         { dot: 'bg-gold-300 animate-pulse', ring: 'border-gold-700/40 bg-ink-200/50', label: 'Provisioning your personal wallet identity…', sub: 'One-time setup. Takes a second or two.' },
+    claimed:          { dot: 'bg-gold-300', ring: 'border-gold-400/50 bg-gradient-to-r from-gold-900/30 to-ink-200/60', label: 'Your personal wallet is ready', sub: 'The config below uses a bearer minted just for you. Anyone with this bearer can sign for your wallet — keep it private.' },
+    'shared-fallback': { dot: 'bg-cream-400', ring: 'border-gold-700/30 bg-ink-200/50', label: 'Using shared demo wallet', sub: "Couldn't mint a personal one (server claim mode may be off). Everyone on this token shares one on-chain address — fine for trying it out." },
+  };
+  const s = styles[status];
+  return (
+    <div className={`mb-5 rounded-lg border ${s.ring} px-4 py-3 flex items-start gap-3`}>
+      <span className={`mt-1.5 h-2 w-2 rounded-full ${s.dot}`} />
+      <div className="text-sm">
+        <div className="text-cream-100 font-medium">{s.label}</div>
+        <div className="text-cream-400 text-[12px] mt-0.5">{s.sub}</div>
+      </div>
+    </div>
   );
 }
 

@@ -28,12 +28,18 @@ import {
 const RITKEY_API_URL = process.env.RITKEY_API_URL ?? 'http://localhost:3000';
 const RITKEY_API_KEY = process.env.RITKEY_API_KEY;
 
-// Single SDK client shared across tool invocations. Constructed at startup
-// so each call doesn't re-allocate HttpTransport.
-const client = new RitkeyClient({
-  baseUrl: RITKEY_API_URL,
-  apiKey: RITKEY_API_KEY,
-});
+/**
+ * Default SDK client — uses bearer auth from env vars. The stdio entrypoint
+ * (index.ts) and the HTTP entrypoint's admin/legacy-bearer path use this.
+ * The HTTP entrypoint's per-claim path passes a different client to
+ * createMcpServer() that signs requests with the claimed user's P-256 keys.
+ */
+export function defaultClient(): RitkeyClient {
+  return new RitkeyClient({
+    baseUrl: RITKEY_API_URL,
+    apiKey: RITKEY_API_KEY,
+  });
+}
 
 /** Marshal any thrown error into an MCP error response. */
 function errorContent(label: string, err: unknown) {
@@ -66,7 +72,7 @@ function okContent(payload: unknown) {
   };
 }
 
-export function createMcpServer(): McpServer {
+export function createMcpServer(client: RitkeyClient = defaultClient()): McpServer {
   const server = new McpServer({
     name: 'ritual-agent-wallet',
     version: '0.1.0',
